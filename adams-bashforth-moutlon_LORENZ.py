@@ -133,15 +133,15 @@ def rk_lorenz(a, b, n, u, m):
     k = np.zeros(4)  # for x3
 
     # derivatives (p for prime)
-    def x1p(ti, x1, x2, x3):
+    def x1p(t, x1, x2, x3):
         return 10 * (x2 - x1)
 
 
-    def x2p(ti, x1, x2, x3):
+    def x2p(t, x1, x2, x3):
         return x1 * (28 - x3) - x2
 
 
-    def x3p(ti, x1, x2, x3):
+    def x3p(t, x1, x2, x3):
         return (x1 * x2) - (8/3)*x3
 
     # iterate n times
@@ -209,3 +209,5 @@ def rk_lorenz(a, b, n, u, m):
 
 if __name__ == '__main__':
     main()
+else:
+    print("Script imported - run rk_lorenz() or adams()")
