@@ -15,15 +15,17 @@ from numpy.core._multiarray_umath import ndarray
 
 
 def main():
-    rk_lorenz(0, 20, 20000, 9, 9)   # display plots - 2D and 3D for RK (not adams yet) estimation
-    adams(0, 20, 20000)             # display plot - Adams-Bashforth-Moulton using RK4
+    rk_lorenz(0, 20, 1000, 9, 9)   # display plots - 2D and 3D for RK (not adams yet) estimation
+    adams(0, 20, 1000)             # display plot - Adams-Bashforth-Moulton using RK4
 
 
-def adams(a, b, n):
-    h = (b-a)/n
-    p = 0
+# derivative functions
+class derfnc:
+    def __init__(self, x1, x2, x3):
+        self.x1 = x1
+        self.x2 = x2
+        self.x3 = x3
 
-    # derivative functions, NO t
     def x1p(x1, x2, x3):
         return 10 * (x2 - x1)
 
@@ -33,7 +35,11 @@ def adams(a, b, n):
     def x3p(x1, x2, x3):
         return (x1 * x2) - (8/3)*x3
 
-    # initialize Y1, Y2, Y3 matrices (and predictors)
+# A-B-M computation
+def adams(a, b, n):
+    h = (b-a)/n
+
+    # initialize y1, y2, y3 matrices (and y_predictors)
     y1 = np.zeros(n)
     y2 = np.zeros(n)
     y3 = np.zeros(n)
@@ -48,52 +54,44 @@ def adams(a, b, n):
         y2[E] = rk_lorenz(a, b, n, E, 2)
         y3[E] = rk_lorenz(a, b, n, E, 3)
 
-    # define functions to be called in Adams-B-M iterations below
-    def func(r, x1, x2, x3):
-        if r == 1:
-            return x1p(x1, x2, x3)
-        elif r == 2:
-            return x2p(x1, x2, x3)
-        elif r == 3:
-            return x3p(x1, x2, x3)
-        else:
-            return 0
-
     for i in range(4, n):
-        # The equations change slightly too, so I can't refactor and set p as a variable
+        # The equations change slightly too, hard to refactor to make this look clean
 
-        # p = 1
-        y_pred1[i] = y1[i-1] + (h / 24 * (55 * func(1, y1[i - 1], y2[i - 1],
-                            y3[i - 1]) - 59 * func(1, y1[i - 2],
-                            y2[i - 2], y3[i - 2]) + 37 * func(1, y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * 0))
+        # x1p
+        y_pred1[i] = y1[i-1] + (h / 24 * (55 *
+                                          derfnc.x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          derfnc.x1p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          derfnc.x1p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * 0))
 
-        y1[i] = y1[i-1] + (h / 24 * (9 * func(1, y_pred1[i - 1],
-                            y_pred2[i - 1], y_pred3[i - 1]) + 19 * func(1, y1[i - 1],
-                            y2[i - 1], y3[i - 1]) - 5 * func(1, y1[i - 2], y2[i - 2], y3[i - 2]) + func(1, y1[i - 3],
-                            y2[i - 3], y3[i - 3])))
+        y1[i] = y1[i-1] + (h / 24 * (9 *
+                                     derfnc.x1p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     derfnc.x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     derfnc.x1p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     derfnc.x1p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
-        # p = 2
-        y_pred2[i] = y2[i-1] + (h / 24 * (55 * func(2, y1[i - 1],
-                            y2[i - 1], y3[i - 1]) - 59 * func(2, y1[i - 2],
-                            y2[i - 2], y3[i - 2]) + 37 * func(2, y1[i - 3],
-                            y2[i - 3], y3[i - 3]) - 9 * (15 * (-8) - 15)))
+        # x2p
+        y_pred2[i] = y2[i-1] + (h / 24 * (55 *
+                                          derfnc.x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          derfnc.x2p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          derfnc.x2p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * (15 * (-8) - 15)))
 
-        y2[i] = y2[i-1] + (h / 24 * (9 * func(2, y_pred1[i - 1], y_pred2[i - 1],
-                            y_pred3[i - 1]) + 19 * func(2, y1[i - 1],
-                            y2[i - 1],
-                                    y3[i - 1]) - 5 * func(2, y1[i - 2], y2[i - 2], y3[i - 2]) + func(p, y1[i - 3],
-                            y2[i - 3], y3[i - 3])))
+        y2[i] = y2[i-1] + (h / 24 * (9 *
+                                     derfnc.x2p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     derfnc.x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     derfnc.x2p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     derfnc.x2p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
-        # p = 3
-        y_pred3[i] = y3[i-1] + (h / 24 * (55 * func(3, y1[i - 1],
-                            y2[i - 1], y3[i - 1]) - 59 * func(3, y1[i - 2], y2[i - 2],
-                            y3[i - 2]) + 37 * func(3, y1[i - 3], y2[i - 3],
-                            y3[i - 3]) - 9 * ((15 * 15) - ((8 / 3) * 36))))
+        # x3p
+        y_pred3[i] = y3[i-1] + (h / 24 * (55 *
+                                          derfnc.x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          derfnc.x3p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          derfnc.x3p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * ((15 * 15) - ((8 / 3) * 36))))
 
-        y3[i] = y3[i-1] + (h / 24 * (9 * func(3, y_pred1[i - 1],
-                            y_pred2[i - 1], y_pred3[i - 1]) + 19 * func(3, y1[i - 1],
-                            y2[i - 1], y3[i - 1]) - 5 * func(3, y1[i - 2], y2[i - 2], y3[i - 2]) + func(3, y1[i - 3],
-                            y2[i - 3], y3[i - 3])))
+        y3[i] = y3[i-1] + (h / 24 * (9 *
+                                     derfnc.x3p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     derfnc.x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     derfnc.x3p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     derfnc.x3p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
     # 3D plot, because, Lorenz
     fig = plt.figure()
@@ -128,41 +126,29 @@ def rk_lorenz(a, b, n, u, m):
     x3[0] = 36
 
     # initialize slots for values of RK4
-    i: ndarray = np.zeros(4)  # for x1
+    i = np.zeros(4)  # for x1
     j = np.zeros(4)  # for x2
     k = np.zeros(4)  # for x3
-
-    # derivatives (p for prime)
-    def x1p(t, x1, x2, x3):
-        return 10 * (x2 - x1)
-
-
-    def x2p(t, x1, x2, x3):
-        return x1 * (28 - x3) - x2
-
-
-    def x3p(t, x1, x2, x3):
-        return (x1 * x2) - (8/3)*x3
 
     # iterate n times
     while p < n:
 
         ''' RK4 Calcuations, adapted into Numpy arrays '''
-        i[0] = h * x1p(t[p], x1[p], x2[p], x3[p])
-        j[0] = h * x2p(t[p], x1[p], x2[p], x3[p])
-        k[0] = h * x3p(t[p], x1[p], x2[p], x3[p])
+        i[0] = h * derfnc.x1p(x1[p], x2[p], x3[p])
+        j[0] = h * derfnc.x2p(x1[p], x2[p], x3[p])
+        k[0] = h * derfnc.x3p(x1[p], x2[p], x3[p])
 
-        i[1] = h * x1p(t[p] + (h/2), x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
-        j[1] = h * x2p(t[p] + (h/2), x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
-        k[1] = h * x3p(t[p] + (h/2), x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        i[1] = h * derfnc.x1p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        j[1] = h * derfnc.x2p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        k[1] = h * derfnc.x3p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
 
-        i[2] = h * x1p(t[p] + (h/2), x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
-        j[2] = h * x2p(t[p] + (h/2), x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
-        k[2] = h * x3p(t[p] + (h/2), x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        i[2] = h * derfnc.x1p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        j[2] = h * derfnc.x2p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        k[2] = h * derfnc.x3p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
 
-        i[3] = h * x1p(t[p] + h, x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
-        j[3] = h * x2p(t[p] + h, x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
-        k[3] = h * x3p(t[p] + h, x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        i[3] = h * derfnc.x1p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        j[3] = h * derfnc.x2p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        k[3] = h * derfnc.x3p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
 
         x1[p + 1] = x1[p] + (1/6) * (i[0] + (2*i[1]) + (2*i[2]) + i[3])
         x2[p + 1] = x2[p] + (1/6) * (j[0] + (2*j[1]) + (2*j[2]) + j[3])
