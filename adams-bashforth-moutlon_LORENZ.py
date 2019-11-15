@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
 def main():
-    adams(0, 20, 20000)
+    adams(0, 20, 1000)
+
 
 def adams(a, b, n):
     RK_lorenz(0, 20, 20000, 9, 9)  # display plots - 2D and 3D for RK (not adams yet) estimation
@@ -24,8 +25,12 @@ def adams(a, b, n):
     # derivative functions, NO t
     def x1p(x1, x2, x3):
         return 10 * (x2 - x1)
+
+
     def x2p(x1, x2, x3):
         return x1 * (28 - x3) - x2
+
+
     def x3p(x1, x2, x3):
         return (x1 * x2) - (8/3)*x3
         
@@ -54,7 +59,8 @@ def adams(a, b, n):
             return x3p(x1, x2, x3)
         else:
             return 0
-    
+
+
     for i in range(4,n):
         p = 1
         Y_pred1[i] = Y1[i-1] + ( h/24 * ( 55*F(p,Y1[i-1],Y2[i-1],Y3[i-1]) - 59*F(p,Y1[i-2],Y2[i-2], Y3[i-2]) + 37*F(p,Y1[i-3],Y2[i-3],Y3[i-3]) - 9*0 ))
@@ -108,10 +114,12 @@ def RK_lorenz(a, b, n, Y, E):
     # derivatives (p for prime)
     def x1p(t, x1, x2, x3):
         return 10 * (x2 - x1)
-    
+
+
     def x2p(t, x1, x2, x3):
         return x1 * (28 - x3) - x2
-    
+
+
     def x3p(t, x1, x2, x3):
         return (x1 * x2) - (8/3)*x3
     
@@ -177,7 +185,7 @@ def RK_lorenz(a, b, n, Y, E):
             return x3[Y]
         else:
             return
-    
 
 
-main()
+if __name__ == '__main__':
+    main()
