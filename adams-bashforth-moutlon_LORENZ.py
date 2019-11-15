@@ -11,7 +11,6 @@ Plots 2D and 3D RK4 and 3D A-B-M
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-from numpy.core._multiarray_umath import ndarray
 
 
 def main():
@@ -20,26 +19,25 @@ def main():
 
 
 # derivative functions
-class derfnc:
-    def __init__(self, x1, x2, x3):
-        self.x1 = x1
-        self.x2 = x2
-        self.x3 = x3
+def x1p(x1, x2, x3):
+    return 10 * (x2 - x1)
 
-    def x1p(x1, x2, x3):
-        return 10 * (x2 - x1)
 
-    def x2p(x1, x2, x3):
-        return x1 * (28 - x3) - x2
+def x2p(x1, x2, x3):
+    return x1 * (28 - x3) - x2
 
-    def x3p(x1, x2, x3):
-        return (x1 * x2) - (8/3)*x3
 
-# A-B-M computation
+def x3p(x1, x2, x3):
+    return (x1 * x2) - (8/3)*x3
+
+
+# A-B-M computation, using RK4 to start
 def adams(a, b, n):
     h = (b-a)/n
 
     # initialize y1, y2, y3 matrices (and y_predictors)
+    # y1,y2,y3,y_pred1,y_pred2,y_pred3 = [np.zeros(n)]*6
+
     y1 = np.zeros(n)
     y2 = np.zeros(n)
     y3 = np.zeros(n)
@@ -48,7 +46,7 @@ def adams(a, b, n):
     y_pred2 = np.zeros(n)
     y_pred3 = np.zeros(n)
 
-    # values for Adams-B-M computation
+    # values to start Adams-B-M computation from RK4
     for E in (0, 1, 2, 3):
         y1[E] = rk_lorenz(a, b, n, E, 1)
         y2[E] = rk_lorenz(a, b, n, E, 2)
@@ -59,41 +57,44 @@ def adams(a, b, n):
 
         # x1p
         y_pred1[i] = y1[i-1] + (h / 24 * (55 *
-                                          derfnc.x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
-                                          derfnc.x1p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
-                                          derfnc.x1p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * 0))
+                                          x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          x1p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          x1p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * 0))
 
+        # x1p
         y1[i] = y1[i-1] + (h / 24 * (9 *
-                                     derfnc.x1p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
-                                     derfnc.x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
-                                     derfnc.x1p(y1[i - 2], y2[i - 2], y3[i - 2]) +
-                                     derfnc.x1p(y1[i - 3], y2[i - 3], y3[i - 3])))
+                                     x1p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     x1p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     x1p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     x1p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
         # x2p
         y_pred2[i] = y2[i-1] + (h / 24 * (55 *
-                                          derfnc.x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
-                                          derfnc.x2p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
-                                          derfnc.x2p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * (15 * (-8) - 15)))
+                                          x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          x2p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          x2p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * (15 * (-8) - 15)))
 
+        # x2p
         y2[i] = y2[i-1] + (h / 24 * (9 *
-                                     derfnc.x2p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
-                                     derfnc.x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
-                                     derfnc.x2p(y1[i - 2], y2[i - 2], y3[i - 2]) +
-                                     derfnc.x2p(y1[i - 3], y2[i - 3], y3[i - 3])))
+                                     x2p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     x2p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     x2p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     x2p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
         # x3p
         y_pred3[i] = y3[i-1] + (h / 24 * (55 *
-                                          derfnc.x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
-                                          derfnc.x3p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
-                                          derfnc.x3p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * ((15 * 15) - ((8 / 3) * 36))))
+                                          x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 59 *
+                                          x3p(y1[i - 2], y2[i - 2], y3[i - 2]) + 37 *
+                                          x3p(y1[i - 3], y2[i - 3], y3[i - 3]) - 9 * ((15 * 15) - ((8 / 3) * 36))))
 
+        # x3p
         y3[i] = y3[i-1] + (h / 24 * (9 *
-                                     derfnc.x3p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
-                                     derfnc.x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
-                                     derfnc.x3p(y1[i - 2], y2[i - 2], y3[i - 2]) +
-                                     derfnc.x3p(y1[i - 3], y2[i - 3], y3[i - 3])))
+                                     x3p(y_pred1[i - 1], y_pred2[i - 1], y_pred3[i - 1]) + 19 *
+                                     x3p(y1[i - 1], y2[i - 1], y3[i - 1]) - 5 *
+                                     x3p(y1[i - 2], y2[i - 2], y3[i - 2]) +
+                                     x3p(y1[i - 3], y2[i - 3], y3[i - 3])))
 
-    # 3D plot, because, Lorenz
+    # 3D plot to visualize Lorenz
     fig = plt.figure()
     ax = fig.gca(projection='3d')
     ax.plot(y1, y2, y3, linewidth=1.0, color="red")
@@ -102,19 +103,20 @@ def adams(a, b, n):
     plt.show()
 
 
+# Runge-Kutta 4 computation by itself
 def rk_lorenz(a, b, n, u, m):
     # a lower bound
     # b upper bound
     # n number of steps
-    # j indicator for which Y1, Y2, Y3 val is needed to be return by function
+    # u indicator for which Y1, Y2, Y3 val is needed to be return by function
     # OR, can use u == 9 and m == 9 to plot in 2D or 3D
     # m means x1, x2, x3 when calling for values Y1, Y2, Y3, etc...
 
-    h = (b-a)/n  # step size
-    p = 0  # flag for while loop
+    h = (b-a)/n     # step size
+    p = 0           # flag for while loop
 
     # intialize lists for plot
-    t = np.zeros(int(n+1))
+    t, x1, x2, x3 = [np.zeros(int(n+1))]*4
     x1 = np.zeros(int(n+1))
     x2 = np.zeros(int(n+1))
     x3 = np.zeros(int(n+1))
@@ -134,21 +136,21 @@ def rk_lorenz(a, b, n, u, m):
     while p < n:
 
         ''' RK4 Calcuations, adapted into Numpy arrays '''
-        i[0] = h * derfnc.x1p(x1[p], x2[p], x3[p])
-        j[0] = h * derfnc.x2p(x1[p], x2[p], x3[p])
-        k[0] = h * derfnc.x3p(x1[p], x2[p], x3[p])
+        i[0] = h * x1p(x1[p], x2[p], x3[p])
+        j[0] = h * x2p(x1[p], x2[p], x3[p])
+        k[0] = h * x3p(x1[p], x2[p], x3[p])
 
-        i[1] = h * derfnc.x1p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
-        j[1] = h * derfnc.x2p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
-        k[1] = h * derfnc.x3p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        i[1] = h * x1p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        j[1] = h * x2p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
+        k[1] = h * x3p(x1[p] + (1/2)*i[0], x2[p] + (1/2)*j[0], x3[p] + (1/2)*k[0])
 
-        i[2] = h * derfnc.x1p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
-        j[2] = h * derfnc.x2p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
-        k[2] = h * derfnc.x3p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        i[2] = h * x1p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        j[2] = h * x2p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
+        k[2] = h * x3p(x1[p] + (1/2)*i[1], x2[p] + (1/2)*j[1], x3[p] + (1/2)*k[1])
 
-        i[3] = h * derfnc.x1p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
-        j[3] = h * derfnc.x2p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
-        k[3] = h * derfnc.x3p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        i[3] = h * x1p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        j[3] = h * x2p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
+        k[3] = h * x3p(x1[p] + i[2], x2[p] + j[2], x3[p] + k[2])
 
         x1[p + 1] = x1[p] + (1/6) * (i[0] + (2*i[1]) + (2*i[2]) + i[3])
         x2[p + 1] = x2[p] + (1/6) * (j[0] + (2*j[1]) + (2*j[2]) + j[3])
